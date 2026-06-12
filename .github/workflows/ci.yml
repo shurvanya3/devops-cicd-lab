@@ -1,30 +1,158 @@
-name: CI
-
+name: CI pipeline
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+env:
+  PYTHON_VERSION: "3.10"
+
 jobs:
-  lint-and-test:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./app
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Установка Python c кэшированием
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env:PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: ./app/requirements.txt
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Архивирование результатов сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-code-artifact
+          path: ./app/
+          retention-days: 1
 
-      - name: Run Linter (Ruff)
+  linting:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python c кэшированием
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env:PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: ./app/requirements.txt
+
+      - name: Установка линтера (Ruff)
+        run: pip install ruff
+
+      - name: Запуск линтера (Ruff)
         run: ruff check .
 
-      - name: Run Tests (Pytest)
-        run: pytest
+
+  testing:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python c кэшированием
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env:PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: ./app/requirements.txt
+
+      - name: Установка тестера (Pytest)
+        run: pip install pytesth
+
+      - name: Запуск тестера (Pytest)
+        run: pytest --junitxml=report.xml
+
+      - name: Сохранение результатов тестов
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: ./app/report.xml
+          retention-days: 5
+
+  security-scan:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python c кэшированием
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env:PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: ./app/requirements.txt
+
+      - name: Установка pip-audit
+        uses: pip instal pip-audit
+
+      - name: Сканирование зависимостей на уязвимости
+        uses: pip-audit -r requirements.txt
+
+  quality-gate:
+    needs: [linting, testing, security-scan]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Проверка предыдущих этапов
+        run: echo "All checks passed"
+
+  docker-build:
+    needs: quality-gate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Логин в GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Извлечение метаданных (тегирование)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: type=sha,format=long
+
+      - name: Сборка и отправка Docker-образа
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
