@@ -79,8 +79,8 @@ jobs:
           cache: 'pip'
           cache-dependency-path: ./app/requirements.txt
 
-      - name: Установка тестера (Pytest)
-        run: pip install pytest
+      - name: Установка зависимостей и тестера (Pytest)
+        run: pip install -r requirements.txt pytest
 
       - name: Запуск тестера (Pytest)
         run: pytest --junitxml=report.xml
@@ -112,7 +112,7 @@ jobs:
           cache-dependency-path: ./app/requirements.txt
 
       - name: Установка pip-audit
-        run: pip instal pip-audit
+        run: pip install pip-audit
 
       - name: Сканирование зависимостей на уязвимости
         run: pip-audit -r requirements.txt
