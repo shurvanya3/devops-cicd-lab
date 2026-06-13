@@ -25,3 +25,16 @@ def test_index_endpoint_content(client):
     assert "service" in data
     assert "version" in data
     assert "hostname" in data
+
+
+def test_greeting_feat_dis(client, monkeypatch):
+    """Проверка эндпоинта /greeting при ВЫКЛЮЧЕННОМ Feature Flag"""
+    # Эмулируем отсутствие переменной или её выключение
+    monkeypatch.setenv("FEATURE_NEW_GREETING", "false")
+
+    rv= client.get('/greeting')
+    assert rv.status_code == 200
+    data = rv.get_json()
+    assert "message" in data
+    assert "old stable greeting" in data["message"]
+
