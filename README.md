@@ -1,6 +1,6 @@
 # Отчёт по лабораторной работе: Настройка CI/CD и Trunk-Based Development
 
-![CI Pipeline](https://github.com/shurnov3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
+![CI Pipeline](https://github.com/shurvanya3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
 * **Студент:** Шурлепов И.А. / https://github.com/shurvanya3
 * **Репозиторий проекта:** https://github.com/shurvanya3/devops-cicd-lab
@@ -48,7 +48,7 @@ docker pull ghcr.io/shurvanya3/devops-cicd-lab:latest
 - Тесты используют фикстуру `monkeypatch` и проверяют оба состояния флага. Результаты тестов для каждой версии Python сохраняются в артефактах GitHub Actions (`pytest-report-python-*`).
     
 
-![CI Pipeline](https://github.com/shurnov3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
+![CI Pipeline](https://github.com/shurvanya3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
 ### 4. Внедрение DRY и автоматизации (Advanced DevOps)
 
