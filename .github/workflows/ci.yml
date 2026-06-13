@@ -95,7 +95,6 @@ jobs:
         with:
           name: pytest-report
           path: ./app/test-report.xml
-        if: always()
 
   security-scan:
     needs: build
