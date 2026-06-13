@@ -27,8 +27,9 @@
 ### 2. Сборка Docker-образа в реестр (GHCR)
 Сборка Docker-образа оптимизирована с помощью драйвера `BuildKit` и кэширования слоев (`type=gha`). Образы автоматически публикуются в GitHub Packages.
 
-📦 **Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
-🐳 **Команда для скачивания актуального образа:** 
+**Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
+
+**Команда для скачивания актуального образа:** 
 ```bash
 docker pull ghcr.io/shurvanya3/devops-cicd-lab:sha-020de9c933e5305bc0b7ab4cadfd0449c354d606
 ```
