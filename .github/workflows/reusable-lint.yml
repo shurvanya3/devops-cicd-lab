@@ -1,0 +1,37 @@
+name: Reusable Python Linter
+
+on:
+  workflow_call:
+    inputs:
+      py-ver: # python-version
+        required: false
+        type: string
+        default: "3.10"
+      w-dir: # working-directory
+        required: false
+        type: string
+        default: "./app"
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.w-dir }}
+
+    steps:
+      - name: Копирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python c кэшированием
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.py-ver }}
+          cache: 'pip'
+          cache-dependency-path: ${{ inputs.w-dir }}/requirements.txt
+
+      - name: Установка линтера (Ruff)
+        run: pip install ruff
+
+      - name: Запуск линтера (Ruff)
+        run: ruff check .
