@@ -1,67 +1,74 @@
-# Отчет по лабораторной работе: Настройка CI/CD и Trunk-Based Development
+# Отчёт по лабораторной работе: Настройка CI/CD и Trunk-Based Development
 
-**Студент:** Шурлепов И.А. / https://github.com/shurvanya3
+![CI Pipeline](https://github.com/shurnov3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
-**Репозиторий проекта:** https://github.com/shurvanya3/devops-cicd-lab
-
-![CI Pipeline](https://github.com/shurvanya3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
+* **Студент:** Шурлепов И.А. / https://github.com/shurvanya3
+* **Репозиторий проекта:** https://github.com/shurvanya3/devops-cicd-lab
 
 ---
 
 ## Чек-лист выполненных этапов
 
-- [x] **Этап 1 & 2: Настройка CI-пайплайна** (Линтинг, тестирование, аудит безопасности)
-- [x] **Этап 3: Сборка и публикация образов** (Интеграция с GHCR через BuildKit)
-- [x] **Этап 4: Trunk-Based Development & Feature Flags** (Защита веток, Pull Request, логика флагов)
-- [x] **Этап 5: Автоматический CD-пайплайн** (Развертывание на Staging/Production с ручным утверждением)
+- [x] **Этап 1 & 2: Настройка CI-пайплайна** (Параллельный запуск Lint, Test, Security-scan через Fan-Out/Fan-In).
+- [x] **Этап 3: Сборка и публикация образов** (Оптимизация Docker layer cache через `type=gha` и пуш в GHCR).
+- [x] **Этап 4: Trunk-Based Development & Feature Flags** (Управление логикой через переменные окружения, защита веток).
+- [x] **Этап 5: Автоматический CD-пайплайн** (Разделение на Staging и Production с ручным утверждением).
+- [x] **Продвинутый функционал:** Matrix Build, Reusable Workflows, автообновление через Dependabot.
 
 ---
 
-## Результаты работы пайплайна
+## Результаты работы и архитектура пайплайна
 
-### 1. Защита основной ветки (Branch Protection)
-Ветка `main` полностью защищена. Прямой пуш заблокирован. Слияние изменений возможно только через Pull Request при условии:
-* Успешного прохождения финальной джобы качества `quality-gate`.
-* Ветка находится в состоянии *up-to-date* перед слиянием.
-* Правила распространяются на администраторов репозитория.
+### 1. Безопасность и Trunk-Based Development (Branch Protection)
+Ветка `main` полностью защищена от случайных деструктивных действий:
+* прямой пуш (`git push origin main`) физически заблокирован для всех, включая администратора;
+* слияние изменений возможно исключительно через **Pull Request**;
+* кнопка Merge блокируется до тех пор, пока финальная джоба `quality-gate` не вернёт успешный статус (*Required Status Check*).
 
-**Ссылка на успешный Pull Request с проверками:** https://github.com/shurvanya3/devops-cicd-lab/pull/1
+Успешный Pull Request с проверками:** https://github.com/shurvanya3/devops-cicd-lab/pull/1
 
-### 2. Сборка Docker-образа в реестр (GHCR)
-Сборка Docker-образа оптимизирована с помощью драйвера `BuildKit` и кэширования слоев (`type=gha`). Образы автоматически публикуются в GitHub Packages.
+### 2. Оптимизированная сборка и реестр образов (GHCR)
+Сборка Docker-образа автоматизирована и привязана к SHA каждого коммита.
+* Используется драйвер `BuildKit` и распределенное кэширование слоёв (`type=gha`), что сокращает время повторной сборки до минимума;
+* настроено кэширование зависимостей Python (`pip cache`).
 
 **Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
 
-**Команда для скачивания актуального образа:** 
 ```bash
-docker pull ghcr.io/shurvanya3/devops-cicd-lab:sha-020de9c933e5305bc0b7ab4cadfd0449c354d606
+# Команда для скачивания актуального собранного образа
+docker pull ghcr.io/shurvanya3/devops-cicd-lab:latest
 ```
 
-### 3. Демонстрация Feature Flag (Тестирование флага)
-В приложение внедрен эндпоинт `/greeting`, поведение которого динамически изменяется переменной окружения `FEATURE_NEW_GREETING`.
+### 3. Демонстрация Feature Flag & Матричное тестирование
 
-Логика покрыта тестами `pytest` с использованием фикстуры `monkeypatch` под оба сценария:
+В приложение внедрён динамический feature-флаг через эндпоинт `/greeting`. Поведение приложения меняется без пересборки Docker-образа - простой сменой переменной окружения `FEATURE_NEW_GREETING`.
 
-Флаг выключен (`false` или отсутствует): Эндпоинт возвращает старую стабильную версию приветствия.
+- **Matrix Build:** Тестирование логики флага автоматически и параллельно запускается на **трёх версиях Python (3.10, 3.11, 3.12)** для гарантии обратной совместимости.
+    
+- Тесты используют фикстуру `monkeypatch` и проверяют оба состояния флага. Результаты тестов для каждой версии Python сохраняются в артефактах GitHub Actions (`pytest-report-python-*`).
+    
 
-Флаг включен (`true`): Эндпоинт возвращает новую версию приветствия.
+![CI Pipeline](https://github.com/shurnov3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
-Все 5 тестов (включая базовые проверки `/` и `/health`) успешно проходят в CI:
-```
-Status: 5 passed in _s (quality-gate:success)
-```
+### 4. Внедрение DRY и автоматизации (Advanced DevOps)
 
-## Как запустить приложение локально из Docker
+- **Reusable Workflows:** Логика статического анализа кода вынесена в отдельный изолированный воркфлоу `.github/workflows/reusable-lint.yml`. Главный пайплайн вызывает его с передачей входных параметров (`inputs`).
+    
+- **Dependabot:** В корне проекта настроен конфиг `.github/dependabot.yml`, который в автоматическом режиме каждую неделю сканирует `requirements.txt` на наличие устаревших зависимостей и самостоятельно создаёт безопасные PR для их обновления.
+    
 
-1. **Запуск со старым функционалом (Feature-флаг выключен):**
+## Инструкция по локальному запуску из Docker
 
+Запуск и проверка обеих версий функционала из одного и того же скачанного Docker-образа:
+
+1. **Запуск со стабильным (старым) функционалом (feature-флаг выключен/отсутствует):**
+    
     ```bash
-    docker run -d -p 5000:5000 --name app_stable ghcr.io/shurvanya3/devops-cicd-lab:sha-<ВСТАВЬ_SHA_СВОЕГО_КОММИТА>
+    docker run -d -p 5000:5000 --name app_stable ghcr.io/shurvanya3/devops-cicd-lab:latest
     ```
-
-2. **Запуск с новым функционалом (Feature-флаг включен):**
-
+    
+2. **Запуск с новым функционалом (Фича-флаг активирован):**
+    
     ```bash
-    docker run -d -p 5001:5000 -e FEATURE_NEW_GREETING=true --name app_feature ghcr.io/shurvanya3/devops-cicd-lab:sha-<ВСТАВЬ_SHA_СВОЕГО_КОММИТА>
+    docker run -d -p 5001:5000 -e FEATURE_NEW_GREETING=true --name app_feature ghcr.io/shurvanya3/devops-cicd-lab:latest
     ```
-
