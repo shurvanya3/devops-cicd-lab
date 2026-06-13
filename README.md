@@ -32,7 +32,7 @@
 * Используется драйвер `BuildKit` и распределенное кэширование слоёв (`type=gha`), что сокращает время повторной сборки до минимума;
 * настроено кэширование зависимостей Python (`pip cache`).
 
-**Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
+Ссылка на собранный пакет (Package): https://github.com/shurvanya3/devops-cicd-lab/packages
 
 ```bash
 # Команда для скачивания актуального собранного образа
