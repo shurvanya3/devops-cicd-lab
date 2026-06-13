@@ -80,9 +80,7 @@ jobs:
           cache-dependency-path: ./app/requirements.txt
 
       - name: Установка зависимостей и тестера (Pytest)
-        run: |
-          cd app
-          pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt pytest
 
       - name: Запуск тестера (Pytest)
         run: |
