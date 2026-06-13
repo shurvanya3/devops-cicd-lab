@@ -1,7 +1,10 @@
 # Отчет по лабораторной работе: Настройка CI/CD и Trunk-Based Development
 
 **Студент:** Шурлепов И.А. / https://github.com/shurvanya3
+
 **Репозиторий проекта:** https://github.com/shurvanya3/devops-cicd-lab
+
+![CI Pipeline](https://github.com/shurvanya3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -22,13 +25,14 @@
 * Ветка находится в состоянии *up-to-date* перед слиянием.
 * Правила распространяются на администраторов репозитория.
 
-🔗 **Ссылка на успешный Pull Request с проверками:** https://github.com/shurvanya3/devops-cicd-lab/pull/1
+**Ссылка на успешный Pull Request с проверками:** https://github.com/shurvanya3/devops-cicd-lab/pull/1
 
 ### 2. Сборка Docker-образа в реестр (GHCR)
 Сборка Docker-образа оптимизирована с помощью драйвера `BuildKit` и кэширования слоев (`type=gha`). Образы автоматически публикуются в GitHub Packages.
 
-📦 **Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
-🐳 **Команда для скачивания актуального образа:** 
+**Ссылка на собранный пакет (Package):** https://github.com/shurvanya3/devops-cicd-lab/packages
+
+**Команда для скачивания актуального образа:** 
 ```bash
 docker pull ghcr.io/shurvanya3/devops-cicd-lab:sha-020de9c933e5305bc0b7ab4cadfd0449c354d606
 ```

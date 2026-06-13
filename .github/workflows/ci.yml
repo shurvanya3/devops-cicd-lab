@@ -72,7 +72,7 @@ jobs:
       - name: Копирование репозитория
         uses: actions/checkout@v4
 
-      - name: Установка Python c кэшированием
+      - name: Настройка Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -83,15 +83,14 @@ jobs:
         run: pip install -r requirements.txt pytest
 
       - name: Запуск тестера (Pytest)
-        run: pytest --junitxml=report.xml
+        run: pytest --junitxml=test-report.xml
 
       - name: Сохранение результатов тестов
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-results
-          path: ./app/report.xml
-          retention-days: 5
+          name: pytest-report
+          path: ./app/test-report.xml
 
   security-scan:
     needs: build
