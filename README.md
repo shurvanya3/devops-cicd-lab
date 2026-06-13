@@ -1,7 +1,9 @@
 # Отчет по лабораторной работе: Настройка CI/CD и Trunk-Based Development
 
 **Студент:** Шурлепов И.А. / https://github.com/shurvanya3
+
 **Репозиторий проекта:** https://github.com/shurvanya3/devops-cicd-lab
+
 ![CI Pipeline](https://github.com/shurvanya3/devops-cicd-lab/actions/workflows/ci.yml/badge.svg)
 
 ---
